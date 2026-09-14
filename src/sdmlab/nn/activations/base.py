@@ -1,6 +1,6 @@
-# nn/layers/base.py
 from ...params.module import Module
 
-class Layer(Module):
+
+class Activation(Module):
     def forward(self, *args, **kwargs):
         raise NotImplementedError
