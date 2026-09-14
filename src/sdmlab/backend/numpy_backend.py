@@ -22,10 +22,10 @@ class NumpyBackend:
     def exp(self, data):
         return np.exp(data)
 
-    def max(self, data, axis = -1, keepdims = False):
+    def max(self, data, axis = None, keepdims = False):
         return np.max(data, axis = axis, keepdims = keepdims)
 
-    def sum(self, data, axis = -1, keepdims = False):
+    def sum(self, data, axis = None, keepdims = False):
         return np.sum(data, axis = axis, keepdims = keepdims)
 
     def clip(self, data, min_value, max_value):
@@ -33,3 +33,9 @@ class NumpyBackend:
 
     def arange(self, start, stop=None, step=1):
         return np.arange(start, stop, step)
+
+    def mean(self, data, axis=None):
+        return np.mean(data, axis=axis)
+
+    def log(self, data):
+        return np.log(data)

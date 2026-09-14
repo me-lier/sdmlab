@@ -115,8 +115,7 @@ class MSE(Function):
         grad_pred = 2 * (pred.data - target.data) / pred.data.size
         return grad_pred * grad_output, None  # No gradient for the target
 
-
-class CrossEntropy(Function):
+class CrossEntropy_without_logits(Function):
     @staticmethod
     def forward(ctx, pred, target):
         ctx.save_for_backward(pred, target)
@@ -165,3 +164,60 @@ class CrossEntropy(Function):
         else:
             raise ValueError("target must be 1D or 2D")
         return (grad_pred / samples) * grad_output, None  # No gradient for the target
+
+
+class CrossEntropy(Function):
+    """Fused softmax + cross-entropy: takes raw logits, not probabilities.
+
+    Fusing avoids ever building softmax's full Jacobian in backward() — the combined
+    gradient collapses to `(probs - target) / samples`, which only holds with respect
+    to the pre-softmax logits. A standalone `Softmax` layer feeding a plain log-loss
+    would need the real per-element gradient instead; this class assumes logits in.
+    """
+
+    @staticmethod
+    def forward(ctx, logits, target):
+        ctx.save_for_backward(logits, target)
+        exp_values = get_backend().exp(
+            logits.data - get_backend().max(logits.data, axis=None, keepdims=True)
+        )
+        probs = exp_values / get_backend().sum(exp_values, axis=None, keepdims=True)
+        ctx.probs = probs
+
+        samples = logits.data.shape[0]
+        probs_clipped = get_backend().clip(probs, 1e-12, 1.0 - 1e-12)
+        if len(target.data.shape) == 1:
+            # Class-index encoding
+            correct_confidence = probs_clipped[
+                get_backend().arange(samples),
+                target.data.astype(int)
+            ]
+        elif len(target.data.shape) == 2:
+            # One-hot encoding
+            correct_confidence = get_backend().sum(
+                probs_clipped * target.data,
+                axis=-1
+            )
+        else:
+            raise ValueError("target must be 1D or 2D")
+        negative_log_likelihoods = -get_backend().log(correct_confidence)
+        return get_backend().mean(negative_log_likelihoods, axis=None)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        logits, target = ctx.saved_tensors
+        probs = ctx.probs
+        samples = logits.data.shape[0]
+        if len(target.data.shape) == 1:
+            # Class-index encoding
+            grad_logits = probs.copy()
+            grad_logits[
+                get_backend().arange(samples),
+                target.data.astype(int)
+            ] -= 1
+        elif len(target.data.shape) == 2:
+            # One-hot encoding
+            grad_logits = probs - target.data
+        else:
+            raise ValueError("target must be 1D or 2D")
+        return (grad_logits / samples) * grad_output, None  # No gradient for the target

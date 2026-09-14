@@ -33,3 +33,9 @@ class CupyBackend:
 
     def arange(self, start, stop=None, step=1):
         return np.arange(start, stop, step)
+
+    def mean(self, data, axis=None):
+        return np.mean(data, axis=axis)
+
+    def log(self, data):
+        return np.log(data)

@@ -3,5 +3,5 @@ from .base import Loss      # or just Layer directly — your call whether a sep
 from ...autograd.ops import CrossEntropy as CrossEntropyFunction
 
 class CrossEntropy(Loss):
-    def forward(self, pred, target):
-        return CrossEntropyFunction.apply(pred, target)
+    def forward(self, logits, target):
+        return CrossEntropyFunction.apply(logits, target)
