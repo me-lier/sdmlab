@@ -4,6 +4,9 @@ This document describes how the `sdmlab` package is organized, why it's organize
 how it's meant to grow — from a neural-network-only library today into something that can also
 host classic ML and other paradigms later without restructuring existing code.
 
+For how the public API is versioned (the `sdmlab.v1` namespace, and what happens when a breaking
+change needs a `v2`), see [VERSIONING.md](VERSIONING.md).
+
 ## Folder Structure
 
 ```
@@ -17,14 +20,28 @@ sdmlab/                                     # repo root (github.com/me-lier/sdml
 │
 ├── src/
 │   └── sdmlab/
-│       ├── __init__.py                     # __version__; re-exports Tensor, set_backend, Sequential
+│       ├── __init__.py                     # __version__; `from sdmlab.v1 import *` (current-
+│       │                                   #   version pointer, see VERSIONING.md); also
+│       │                                   #   re-exports Tensor, set_backend directly (unversioned)
 │       ├── py.typed                        # PEP 561 marker
 │       │
 │       │                                   # ---- flat-import shims (matches the example API) ----
-│       ├── layers.py                       # `from sdmlab.nn.layers import *`      -> v0.1.0
-│       ├── activations.py                  # `from sdmlab.nn.activations import *` -> v0.2.0
-│       ├── losses.py                       # `from sdmlab.nn.losses import *`      -> v0.3.0
-│       ├── optimizers.py                   # `from sdmlab.optim import *`          -> v0.4.0
+│       │                                   #   forward through the CURRENT version namespace,
+│       │                                   #   not straight at nn/optim — see VERSIONING.md
+│       ├── layers.py                       # `from sdmlab.v1.layers import *`      -> v0.1.0
+│       ├── activations.py                  # `from sdmlab.v1.activations import *` -> v0.2.0
+│       ├── losses.py                       # `from sdmlab.v1.losses import *`      -> v0.3.0
+│       ├── optimizers.py                   # `from sdmlab.v1.optimizers import *`  -> v0.4.0
+│       │
+│       ├── v1/                             # === the "v1" public API snapshot ===
+│       │   ├── __init__.py                 # re-exports layers/activations/losses/optimizers
+│       │   │                               #   + Sequential — this is what "v1" means, concretely
+│       │   ├── layers.py                   # -> sdmlab.nn.layers (until v1 needs a frozen override)
+│       │   ├── activations.py              # -> sdmlab.nn.activations
+│       │   ├── losses.py                   # -> sdmlab.nn.losses
+│       │   └── optimizers.py               # -> sdmlab.optim
+│       │                                   #   (a future v2/ is a sibling of this, created only
+│       │                                   #    on an intentional breaking change — VERSIONING.md)
 │       │
 │       ├── backend/                        # === FOUNDATION 1 — array-op abstraction ===
 │       │   ├── __init__.py                 # set_backend("numpy"|"cupy"), get_backend()
@@ -96,6 +113,7 @@ sdmlab/                                     # repo root (github.com/me-lier/sdml
 ├── examples/                               # one runnable script per milestone
 └── docs/
     ├── ARCHITECTURE.md                     # this file
+    ├── VERSIONING.md                       # the v1/v2 API-namespace mechanism, in full
     └── notes/                              # one write-up per concept as it's built
         ├── tensor.md
         ├── autograd.md
@@ -137,9 +155,10 @@ holds one "active backend" reference, swapped by `sdmlab.set_backend("numpy" | "
 written once against the protocol and never touched again when a second backend is added.
 
 **Root import shims.** `layers.py`, `activations.py`, `losses.py`, `optimizers.py` at the package
-root are one-line re-exports (`from sdmlab.nn.layers import *`, etc.) so calls like
-`from sdmlab.layers import Dense` work directly, while the real code stays organized under
-`nn/`/`optim/`.
+root are one-line re-exports so calls like `from sdmlab.layers import Dense` work directly, while
+the real code stays organized under `nn/`/`optim/`. They forward through `sdmlab.v1` rather than
+straight at `nn`/`optim` — see [VERSIONING.md](VERSIONING.md) for why that indirection exists and
+what it costs (nothing, until a version needs to diverge).
 
 ## Roadmap → File → Version
 

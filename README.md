@@ -71,16 +71,17 @@ any particular API surface.
 
 ## Versioning
 
-SDMLab follows [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`), tracked in
-[CHANGELOG.md](CHANGELOG.md) and `sdmlab.__version__`. A `MINOR` bump generally corresponds to one
-new concept landing (a layer, an optimizer, ...); a `MAJOR` bump is reserved for a breaking change
-to the public API once the library is stable enough for that to matter.
+Two independent things are versioned here:
 
-To depend on a specific release, pin it the normal `pip` way:
-
-```bash
-pip install sdmlab==0.1.0
-```
+- **Releases** follow [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`), tracked in
+  [CHANGELOG.md](CHANGELOG.md) and `sdmlab.__version__`. A `MINOR` bump generally corresponds to
+  one new concept landing (a layer, an optimizer, ...). To depend on a specific release, pin it the
+  normal `pip` way: `pip install sdmlab==0.1.0`.
+- **The public API** is versioned separately as a namespace: `sdmlab.v1`, and later `sdmlab.v2` if
+  a `MAJOR` bump ever requires one. Plain `import sdmlab` always follows whichever namespace is
+  currently the default — that's a deliberate choice made in this repo, not something you opt into
+  — while code that wants to freeze against one API shape forever can `import sdmlab.v1` directly.
+  Full mechanism: [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## Project layout
 
