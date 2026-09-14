@@ -30,7 +30,7 @@ class Tensor:
         self.grad = grad if self.grad is None else get_backend().add(self.grad, grad)  # accumulate
 
         if self._ctx is not None:
-            input_grads = self._ctx.backward(grad)
+            input_grads = type(self._ctx).backward(self._ctx, grad)
             for input_tensor, input_grad in zip(self._ctx.saved_tensors, input_grads):
                 if input_tensor.requires_grad:
                     input_tensor.backward(input_grad)
