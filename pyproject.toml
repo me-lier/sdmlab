@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sdmlab"
+version = "0.0.1"
+description = "SDMLab -- a from-scratch machine learning / neural network library, built incrementally as a learning project."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Srinivas Deekonda" }]
+requires-python = ">=3.9"
+dependencies = ["numpy"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+]
+
+[project.optional-dependencies]
+gpu = ["cupy"]
+dev = ["pytest", "ruff", "mypy"]
+
+[project.urls]
+Homepage = "https://github.com/me-lier/sdmlab"
+
+[tool.setuptools.packages.find]
+where = ["src"]
