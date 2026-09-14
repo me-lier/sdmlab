@@ -1,6 +1,14 @@
 from .function import Function
 from ..backend import get_backend
 
+def _unbroadcast(grad, target_shape):
+    while grad.ndim > len(target_shape):
+        grad = grad.sum(axis=0)
+    for axis, size in enumerate(target_shape):
+        if size == 1 and grad.shape[axis] != 1:
+            grad = grad.sum(axis=axis, keepdims=True)
+    return grad
+
 class MatMul(Function):
     @staticmethod
     def forward(ctx, a, b):
@@ -22,7 +30,10 @@ class Add(Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        return grad_output, grad_output   # d(a+b)/da = 1, d(a+b)/db = 1 — gradient just passes through
+        a, b = ctx.saved_tensors
+        grad_a = _unbroadcast(grad_output, a.data.shape)
+        grad_b = _unbroadcast(grad_output, b.data.shape)
+        return grad_a, grad_b
 
 
 class ReLU(Function):
