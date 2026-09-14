@@ -179,9 +179,9 @@ class CrossEntropy(Function):
     def forward(ctx, logits, target):
         ctx.save_for_backward(logits, target)
         exp_values = get_backend().exp(
-            logits.data - get_backend().max(logits.data, axis=None, keepdims=True)
+            logits.data - get_backend().max(logits.data, axis=-1, keepdims=True)
         )
-        probs = exp_values / get_backend().sum(exp_values, axis=None, keepdims=True)
+        probs = exp_values / get_backend().sum(exp_values, axis=-1, keepdims=True)
         ctx.probs = probs
 
         samples = logits.data.shape[0]

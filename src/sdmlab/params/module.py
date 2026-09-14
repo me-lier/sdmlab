@@ -17,3 +17,6 @@ class Module:
 
     def __call__(self, *args, **kwargs):
         return self.forward(*args, **kwargs)        # this is what makes `layer(x)` work instead of `layer.forward(x)`
+
+    def forward(self, *args, **kwargs):
+        raise NotImplementedError

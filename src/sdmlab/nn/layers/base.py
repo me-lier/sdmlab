@@ -2,5 +2,4 @@
 from ...params.module import Module
 
 class Layer(Module):
-    def forward(self, *args, **kwargs):
-        raise NotImplementedError
+    pass
