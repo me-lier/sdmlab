@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sdmlab"
-version = "0.0.12"
+version = "0.0.13"
 description = "SDMLab -- a from-scratch machine learning / neural network library, built incrementally as a learning project."
 readme = "README.md"
 license = { file = "LICENSE" }

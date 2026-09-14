@@ -27,3 +27,9 @@ class CupyBackend:
 
     def sum(self, data, axis = -1, keepdims = False):
             return np.sum(data, axis = axis, keepdims = keepdims)
+
+    def clip(self, data, min_value, max_value):
+        return np.clip(data, min_value, max_value)
+
+    def arange(self, start, stop=None, step=1):
+        return np.arange(start, stop, step)

@@ -100,3 +100,68 @@ class Softmax(Function):
     def backward(ctx, grad_output):
         softmax_x = ctx.result
         return (softmax_x * (grad_output - get_backend().sum(grad_output * softmax_x, axis = -1, keepdims = True)), )
+
+
+class MSE(Function):
+    @staticmethod
+    def forward(ctx, pred, target):
+        ctx.save_for_backward(pred, target)
+        diff = pred.data - target.data
+        return get_backend().sum(diff ** 2) / diff.size
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        pred, target = ctx.saved_tensors
+        grad_pred = 2 * (pred.data - target.data) / pred.data.size
+        return grad_pred * grad_output, None  # No gradient for the target
+
+
+class CrossEntropy(Function):
+    @staticmethod
+    def forward(ctx, pred, target):
+        ctx.save_for_backward(pred, target)
+        samples = pred.data.shape[0]
+        pred_clipped = get_backend().clip(
+            pred.data,
+            1e-12,
+            1.0 - 1e-12
+        )
+        if len(target.data.shape) == 1:
+            # Class-index encoding
+            correct_confidence = pred_clipped[
+                get_backend().arange(samples),
+                target.data.astype(int)
+            ]
+        elif len(target.data.shape) == 2:
+            # One-hot encoding
+            correct_confidence = get_backend().sum(
+                pred_clipped * target.data,
+                axis=-1
+            )
+        else:
+            raise ValueError("target must be 1D or 2D")
+        negative_log_likelihoods = -get_backend().log(correct_confidence)
+        return get_backend().mean(negative_log_likelihoods)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        pred, target = ctx.saved_tensors
+        samples = pred.data.shape[0]
+        pred_clipped = get_backend().clip(
+            pred.data,
+            1e-12,
+            1.0 - 1e-12
+        )
+        if len(target.data.shape) == 1:
+            # Class-index encoding
+            grad_pred = pred_clipped.copy()
+            grad_pred[
+                get_backend().arange(samples),
+                target.data.astype(int)
+            ] -= 1
+        elif len(target.data.shape) == 2:
+            # One-hot encoding
+            grad_pred = pred_clipped - target.data
+        else:
+            raise ValueError("target must be 1D or 2D")
+        return (grad_pred / samples) * grad_output, None  # No gradient for the target
