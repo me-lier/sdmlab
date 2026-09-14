@@ -70,7 +70,7 @@ class TanH(Function):
     def backward(ctx, grad_output):
         tanh_x = ctx.result
 
-        return (grad_output * (1 - tanh_x ** 2))
+        return (grad_output * (1 - tanh_x ** 2), )
 
 
 class Softmax(Function):
@@ -88,4 +88,4 @@ class Softmax(Function):
     @staticmethod
     def backward(ctx, grad_output):
         softmax_x = ctx.result
-        return (softmax_x * (grad_output - get_backend().sum(grad_output * softmax_x, axis = -1, keepdims = True)))
+        return (softmax_x * (grad_output - get_backend().sum(grad_output * softmax_x, axis = -1, keepdims = True)), )
